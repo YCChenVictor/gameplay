@@ -4,12 +4,23 @@ import time
 from PIL import ImageGrab
 import pytesseract
 import queue
+import random
 
 job_queue = queue.Queue()
 game_window = None
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 hp_x, hp_y = 300, 790
 mp_x, mp_y = 430, 790
+
+def press_keys_together(key1, key2):
+    pydirectinput.keyDown(key1)
+    pydirectinput.keyDown(key2)
+    pydirectinput.keyUp(key2)
+    pydirectinput.keyUp(key1)
+
+def named_job(name, func):
+    func.__name__ = name
+    return func
 
 def initialize_window():
     global game_window
@@ -26,6 +37,12 @@ def is_red(x, y):
     pixel_color = screenshot.getpixel((x, y))
     red, green, blue = pixel_color
     return red > 200
+
+def move(direction):
+    if direction == 'left':
+        pydirectinput.press('left')
+    elif direction == 'right':
+        pydirectinput.press('right')
 
 def check_hp(x, y):
     if not is_red(x, y):
@@ -55,15 +72,25 @@ def play():
     job_queue.put(lambda: check_status())
     counter = 0
     while True: # add a command queue
-        job_queue.put(lambda: check_hp(hp_x, hp_y))
-        job_queue.put(lambda: check_mp(mp_x, mp_y))
         counter += 1
-        if counter >= 200:
-            job_queue.put(lambda: check_status())
-            counter = 0
-        job_queue.put(lambda: attack())
+        if counter % 199 == 0:
+            job_queue.put(named_job('check_status', lambda: check_status()))
+            time.sleep(1)
+        elif counter % 21 == 0:
+            for _ in range(random.randint(4, 6)):
+                job_queue.put(named_job('press_keys', lambda: press_keys_together('left', 'v')))
+            for _ in range(random.randint(1, 3)):
+                job_queue.put(named_job('press_kevys', lambda: press_keys_together('right', 'v')))
+        elif counter % 31 == 0:
+            job_queue.put(named_job('move_left', lambda: move('left')))
+            job_queue.put(named_job('move_right', lambda: move('right')))
+        else:
+            job_queue.put(named_job('check_hp', lambda: check_hp(hp_x, hp_y)))
+            job_queue.put(named_job('check_mp', lambda: check_mp(mp_x, mp_y)))
+            job_queue.put(named_job('attack', lambda: attack()))
 
         job = job_queue.get()
+        print(job.__name__)
         job()
         job_queue.task_done()
 
