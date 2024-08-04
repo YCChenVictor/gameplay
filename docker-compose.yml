@@ -1,6 +1,7 @@
 services:
-  pyautogui-app:
+  app:
     build: .
-    command: python main.py
+    container_name: app
     volumes:
       - .:/app
+      
