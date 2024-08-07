@@ -73,9 +73,13 @@ def play():
     counter = 0
     while True: # add a command queue
         counter += 1
-        if counter % 199 == 0:
+        if counter % 101 == 0:
             job_queue.put(named_job('check_status', lambda: check_status()))
-            time.sleep(1)
+        elif counter % 801 == 0:
+            job_queue.put(named_job('feed pet', lambda: pydirectinput.press('y')))
+        elif counter % 5 == 0:
+            job_queue.put(named_job('check_hp', lambda: check_hp(hp_x, hp_y)))
+            job_queue.put(named_job('check_mp', lambda: check_mp(mp_x, mp_y)))
         elif counter % 21 == 0:
             for _ in range(random.randint(4, 6)):
                 job_queue.put(named_job('press_keys', lambda: press_keys_together('left', 'v')))
@@ -85,8 +89,6 @@ def play():
             job_queue.put(named_job('move_left', lambda: move('left')))
             job_queue.put(named_job('move_right', lambda: move('right')))
         else:
-            job_queue.put(named_job('check_hp', lambda: check_hp(hp_x, hp_y)))
-            job_queue.put(named_job('check_mp', lambda: check_mp(mp_x, mp_y)))
             job_queue.put(named_job('attack', lambda: attack()))
 
         job = job_queue.get()
